@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: go-app-dev
+    container_name: go-absendulu-dev
     ports:
       - "8080:8080"
     volumes:

@@ -53,10 +53,8 @@ func (r *repository) GetAll(ctx context.Context) ([]models.Attendance, error) {
 	var results []models.Attendance
 
 	data, _, err := r.db.From("attendances").
-		Select("*", "0", false).
-		Order("created_at", &postgrest.OrderOpts{
-			Ascending: false,
-		}).
+		Select("*, sites(*, companies(*)), clock_in_geofence, clock_out_geofence", "", false).
+		Order("created_at", &postgrest.OrderOpts{Ascending: false}).
 		Execute()
 
 	if err != nil {
@@ -73,26 +71,24 @@ func (r *repository) GetAll(ctx context.Context) ([]models.Attendance, error) {
 }
 
 func (r *repository) GetByID(ctx context.Context, id int64) (*models.Attendance, error) {
-	var result []models.Attendance
+	var one models.Attendance
 
 	data, _, err := r.db.From("attendances").
-		Select("*", "0", false).
+		Select("*, sites(*, companies(*)), clock_in_geofence, clock_out_geofence", "", false).
 		Eq("id", fmt.Sprintf("%d", id)).
+		Single().
 		Execute()
 	if err != nil {
 		log.Printf("Error fetching attendance by ID: %v", err)
 		return nil, err
 	}
 
-	if err := json.Unmarshal(data, &result); err != nil {
+	if err := json.Unmarshal(data, &one); err != nil {
 		log.Printf("Error unmarshaling attendance data by ID: %v", err)
 		return nil, err
 	}
 
-	if len(result) == 0 {
-		return nil, nil
-	}
-	return &result[0], nil
+	return &one, nil
 }
 
 func (r *repository) Update(ctx context.Context, id int64, attendance models.Attendance) (*models.Attendance, error) {
